@@ -1,1 +1,1 @@
-# l2t-sd
+# learn2train Stable Diffusion
