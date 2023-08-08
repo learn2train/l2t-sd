@@ -123,7 +123,8 @@ def main(filename, ckpt_folder, checkpoints, baseline_ckpt, output_folder, sampl
                         marginSize,                        ]
                     )
         seq = '{0:0>4}'.format(counter)
-        path_filename = f'{output_folder}/{dt}/xyz_grid-{seq}-{seed}-{width}x{height}-{prompt}'
+        truncated_prompt = prompt[:100]
+        path_filename = f'{output_folder}/{dt}/xyz_grid-{seq}-{seed}-{width}x{height}-{truncated_prompt}'
         print(f'Saving image as {path_filename}.png')
         print('')
         result.image.save(f'{path_filename}.png')
