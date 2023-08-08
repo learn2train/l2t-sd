@@ -93,7 +93,7 @@ def main(filename, ckpt_folder, checkpoints, baseline_ckpt, output_folder, sampl
         YAxisType = "Checkpoint name"
         YAxisValues = checkpoints
         ZAxisType = z_axis_type
-        ZAxisValues = prompt_sr
+        ZAxisValues = z_axis_values
         drawLegend = "True"
         includeLoneImages = "False"
         includeSubGrids = "False"
