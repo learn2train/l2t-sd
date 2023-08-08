@@ -84,7 +84,7 @@ def main(filename, ckpt_folder, checkpoints, baseline_ckpt, output_folder, sampl
         counter += 1
         print(f'Generating xyz grid {counter} out of {len(prompt_tests_list)} prompt tests')
         prompt = p.get('prompt')
-        prompt_sr = p.get('prompt_sr')
+        z_axis_values = p.get('z_axis_values')
         seed = str(p.get('seed'))
         z_axis_type = p.get('z_axis_type')
         # Prepare prompt
