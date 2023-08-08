@@ -84,6 +84,7 @@ def main(filename, ckpt_folder, checkpoints, baseline_ckpt, output_folder, sampl
         counter += 1
         print(f'Generating xyz grid {counter} out of {len(prompt_tests_list)} prompt tests')
         prompt = p.get('prompt')
+        negative_prompt = p.get('negative_prompt')
         z_axis_values = p.get('z_axis_values')
         seed = str(p.get('seed'))
         z_axis_type = p.get('z_axis_type')
@@ -101,6 +102,7 @@ def main(filename, ckpt_folder, checkpoints, baseline_ckpt, output_folder, sampl
         marginSize = 0
         result = api.txt2img(
                     prompt=prompt,
+                    negative_prompt=negative_prompt,
                     seed=seed,
                     cfg_scale=cfg_scale,
                     width=width,
@@ -131,6 +133,7 @@ def main(filename, ckpt_folder, checkpoints, baseline_ckpt, output_folder, sampl
         # Save txt file
         image_info =  f'''
 Prompt: {prompt}
+Negative prompt: {negative_prompt}
 
 Steps: {steps}
 Sampler: {sampler}
