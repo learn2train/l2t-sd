@@ -13,10 +13,10 @@ def main(filename, ckpt_folder, checkpoints, baseline_ckpt, output_folder, sampl
     Generate XYZ grids from a prompt test JSON file and save images and their respective text files to `output` folder.
 
     Examples:
-    $ python3 generate_xyz_grids.py -f 'prompt_sr_tests.json' -C 'models/Stable-diffusion' -o 'output'
-    $ python3 generate_xyz_grids.py -f 'xyz_prompt_tests.json'
-    $ python3 generate_xyz_grids.py -f 'xyz_prompt_tests.json' -w 1024 -h 512
-    $ wget -O - https://raw.githubusercontent.com/roperi/sd-utils/main/generate_xyz_grids.py | python3 - -f 'xyz_prompt_tests.json'
+    $ python3 generate_xyz_grids.py -f 'prompt_sr.json' -C 'models/Stable-diffusion' -o 'output'
+    $ python3 generate_xyz_grids.py -f 'xyz_prompts.json'
+    $ python3 generate_xyz_grids.py -f 'xyz_prompts.json' -w 1024 -h 512
+    $ wget -O - https://raw.githubusercontent.com/learn2train/l2t-sd/main/utils/generate_xyz_grids.py | python3 - -f xyz_prompts.json --checkpoints $CHECKPOINTS
     """
     # datetime
     dt = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -142,7 +142,7 @@ Fixed X Values: {seed}
 Y Type: Checkpoint name
 Y Values: {checkpoints}
 Z Type: {z_axis_type}
-Z Values: "{prompt_sr}"
+Z Values: "{z_axis_values}"
 '''
         with open(f"{path_filename}.txt", "w") as f:
             f.write(image_info)
