@@ -5,72 +5,139 @@ import sys
 import os
 import random
 import argparse
+import imghdr
+
+
+def is_image(file_path):
+    image_formats = ['jpeg', 'jpg', 'png', 'gif', 'bmp', 'tiff', 'webp']  # Add more formats if needed
+    return imghdr.what(file_path) in image_formats
+
+def count_images_in_folder(folder_path):
+    image_count = 0
+    for root, _, files in os.walk(folder_path):
+        for filename in files:
+            file_path = os.path.join(root, filename)
+            if is_image(file_path):
+                image_count += 1
+    return image_count
 
 def clean_filename(filename):
     return filename.split('_')[0]
 
-def get_filenames_from_target_folder(input_folder):
-    filename_list = []
-    for root, dirs, files in os.walk(input_folder):
-        for file in files:
-            filename_list.append(file)
-    return filename_list
-
-def main(filename, input_folder, seed, prompts, duplicate, token, replace_token):
+def get_captions_from_filename(input_directory):
     """
-    Create a XYZ prompt tests from caption filenames.
+    Get captions from image filenames inside an input directory recursively and put them into a list. 
+
+    Example:
+
+    input/'a man and his dog.jpg'
+    input/dogs/'a dog having a beer.jpg'
+
+    $ get_captions_from_filename('input')
+    $ ['a man and his dog', 'a dog having a beer']
+    """
+    image_formats = ['jpeg', 'jpg', 'png', 'gif', 'bmp', 'tiff', 'webp']  # Add more formats if needed
+    filename_list = [] 
+    for root, _, files in os.walk(input_directory):
+        for filename in files:
+            file_path = os.path.join(root, filename)
+            if imghdr.what(file_path) in image_formats:
+                filename_list.append(filename)
+    caption_list = []
+    for file in filename_list:
+        caption_list.append(clean_filename(file))
+    return caption_list
+
+def get_captions(input_directory):
+    """
+    Get captions from text files inside an input folder recursively and put them into a list.
+    
+    Example:
+
+    input/001.txt # a man climbing a wall
+    input/bearded-men/022.txt # a close up photo of a bearded man
+
+    $ get_captions.py('input')
+    ['a man climbing a wall', 'a close up photo of a bearded man']
+    """
+    caption_list = []
+    for root, _, files in os.walk(input_directory):
+        for filename in files:
+            file_path = os.path.join(root, filename)
+            if filename.endswith('.txt'):
+                try:
+                    with open(file_path, 'r') as f:
+                        caption_list.append(f.readline().strip())
+                except Exception as e:
+                    print(f"An error occurred: {e}")
+    return caption_list
+
+def main(num_prompts, output_file, input_directory, negative_prompt,  seed, z_axis_type, z_axis_values, filename_caption):
+    """
+    Create a XYZ grid prompt json file from captions inside an input directory. 
+
+    Other prompt parameters can be used and will be applied to all captions:
+    - Negative prompt
+    - Seed
+    - Z axis type
+    - Z axis values
 
     Examples:
-    $ python3 caption2prompt.py -d
-    $ python3 caption2prompt.py -i input -t blip -p 15 --seed -1 -d
-    $ wget -O - https://github.com/roperi/sd-utils/raw/main/caption2prompt.py | python3 - -d -S 30
+    $ python caption2prompt.py xyz_prompts_test-caption-in-filename.json -N "(low quality, worst quality), EasyNegativeV2" --z_axis_type "Prompt S/R" --z_axis_values "JoeSmith,man" --seed -1 -n 20 -f
+    $ python caption2prompt.py --z_axis_type "Steps" --z_axis_values "20,30" --seed 1234 -d input-1
     """
-    caption_list = random.sample(get_filenames_from_target_folder(input_folder), prompts)
+    image_count = count_images_in_folder(input_directory)
+    print(f'Found {image_count} valid image files in the `{input_directory}` directory')
+    if image_count < num_prompts:
+        print(f'ERROR: Not enough images to generate {num_prompts} prompts')
+        sys.exit(1)
 
-    # Extend caption list including captions without token
-    caption_without_token = []
-    if duplicate:
-        for caption in caption_list:
-            if token:
-                caption_without_token.append(caption.replace(token, replace_token))
-            else:
-                caption_without_token.append(caption.split(', ')[-1])
+    # Get captions
+    if filename_caption:
+        captions = get_captions_from_filename(input_directory)
+    else:
+        captions = get_captions(input_directory)
 
-    prompt_list = caption_list + caption_without_token
-
-    # Prepare data dict with captions as prompts
-    data = []
-    for prompt in prompt_list:
-        d = {}
-        d['prompt'] = prompt
-        d['prompt_sr'] = ''
-        d['z_axis_type'] = 'Nothing'
-        d['seed'] = seed
-        data.append(d)
-
-    # Save prompts to json file
-    with open(filename, 'w') as fp:
-        json.dump(data, fp)
+    if captions:
+        caption_list = random.sample(captions, num_prompts)
+        # Prepare data dict with captions as prompts
+        data = []
+        for prompt in caption_list:
+    	    d = {}
+    	    d['prompt'] = prompt
+    	    d['negative_prompt'] = negative_prompt
+    	    d['seed'] = seed
+    	    d['z_axis_type'] = z_axis_type
+    	    d['z_axis_values'] = z_axis_values
+    	    data.append(d)
+        # Save prompts to json file
+        with open(output_file, 'w') as fp:
+            json.dump(data, fp)
+    else:
+        print('ERROR: Could not get captions')
+        return sys.exit(1)
 
 if __name__ == '__main__':
     # Parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--filename', type=str, default='xyz_prompt_tests.json', help='The name of the tests JSON file (default: xyz_prompt_tests.json)')
-    parser.add_argument('-i', '--input_folder', type=str, default='input', help='The folder where caption filenames are located (default: input)')
-    parser.add_argument('--seed', type=int, default=555, help='Seed value (default: 555)')
-    parser.add_argument('-p', '--prompts', type=int, default=15, help='Number of prompts to generate at random from the input folder (default: 15)')
-    parser.add_argument('-d', '--duplicate', action="store_true", default=False, help='Duplicate every caption without its token (default: False)')
-    parser.add_argument('-T', '--token', type=str, default='', help='Token to be replaced (default: "")')
-    parser.add_argument('-r', '--replace_token', type=str, help="Replace token")
+    parser.add_argument('-n', '--num_prompts', type=int, default=15, help='Number of prompts to generate at random from the files in input directory (default: 15)')
+    parser.add_argument('-d', '--input_directory', type=str, default='input', help="The folder where caption filenames are located (default: 'input')")
+    parser.add_argument('-O', '--output_file', type=str, default='xyz_prompts.json', help='The name of the JSON file (default: xyz_prompts.json)')
+    parser.add_argument('-N', '--negative_prompt', type=str, default='', help="Negative prompt (default: '(low quality, worst quality)')")
+    parser.add_argument('-s', '--seed', type=int, default=-1, help='Seed value (default: -1)')
+    parser.add_argument('-z', '--z_axis_type', type=str, default='Nothing', help="Z axis type. Options: 'Nothing', 'Prompt S/R', 'Steps', 'CFG Scale', 'Sampler', etc. (default: 'Nothing')")
+    parser.add_argument('-Z', '--z_axis_values', default='', type=str, help="Z axis values. (default: '')")
+    parser.add_argument('-f', '--filename_caption', action='store_true', default=False, help='Get captions from filenames. (default: False)')
     args = parser.parse_args()
 
-    filename = args.filename
-    input_folder = args.input_folder
+    num_prompts = args.num_prompts
+    input_directory = args.input_directory
+    output_file = args.output_file
+    negative_prompt = args.negative_prompt
     seed = args.seed
-    prompts = args.prompts
-    duplicate = args.duplicate
-    token = args.token
-    replace_token = args.replace_token
-
+    z_axis_type = args.z_axis_type
+    z_axis_values = args.z_axis_values
+    filename_caption = args.filename_caption
+    
     # Run main
-    main(filename, input_folder, seed, prompts, duplicate, token, replace_token)
+    main(num_prompts, output_file, input_directory, negative_prompt,  seed, z_axis_type, z_axis_values, filename_caption)
