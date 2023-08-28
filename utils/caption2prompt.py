@@ -83,7 +83,7 @@ def main(num_prompts, output_file, input_directory, negative_prompt,  seed, z_ax
     - Z axis values
 
     Examples:
-    $ python caption2prompt.py xyz_prompts_test-caption-in-filename.json -N "(low quality, worst quality), EasyNegativeV2" --z_axis_type "Prompt S/R" --z_axis_values "JoeSmith,man" --seed -1 -n 20 -f
+    $ python caption2prompt.py -O xyz_prompts_test-caption-in-filename.json -N "(low quality, worst quality), EasyNegativeV2" --z_axis_type "Prompt S/R" --z_axis_values "Joe Smith,man" --seed -1 -n 20 -f
     $ python caption2prompt.py --z_axis_type "Steps" --z_axis_values "20,30" --seed 1234 -d input-1
     """
     image_count = count_images_in_folder(input_directory)
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--num_prompts', type=int, default=15, help='Number of prompts to generate at random from the files in input directory (default: 15)')
     parser.add_argument('-d', '--input_directory', type=str, default='input', help="The folder where caption filenames are located (default: 'input')")
     parser.add_argument('-O', '--output_file', type=str, default='xyz_prompts.json', help='The name of the JSON file (default: xyz_prompts.json)')
-    parser.add_argument('-N', '--negative_prompt', type=str, default='', help="Negative prompt (default: '(low quality, worst quality)')")
+    parser.add_argument('-N', '--negative_prompt', type=str, default='', help="Negative prompt (default: '')")
     parser.add_argument('-s', '--seed', type=int, default=-1, help='Seed value (default: -1)')
     parser.add_argument('-z', '--z_axis_type', type=str, default='Nothing', help="Z axis type. Options: 'Nothing', 'Prompt S/R', 'Steps', 'CFG Scale', 'Sampler', etc. (default: 'Nothing')")
     parser.add_argument('-Z', '--z_axis_values', default='', type=str, help="Z axis values. (default: '')")
@@ -138,6 +138,6 @@ if __name__ == '__main__':
     z_axis_type = args.z_axis_type
     z_axis_values = args.z_axis_values
     filename_caption = args.filename_caption
-    
+
     # Run main
     main(num_prompts, output_file, input_directory, negative_prompt,  seed, z_axis_type, z_axis_values, filename_caption)
