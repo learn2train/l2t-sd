@@ -10,12 +10,11 @@ import webuiapi
 
 def main(filename, output_folder, sampler, steps, seed, cfg_scale, width, height):
     """
-    Generate XYZ grids from a prompt test JSON file and save images and texts to the `output` folder.
+    Generate XYZ grids from a XYZ prompt JSON file and save images and texts to the `output` folder.
 
     Examples:
-    $ python3 generate_xyz_grids.py -f 'prompt_sr.json' -C 'models/Stable-diffusion' -o 'output'
-    $ python3 generate_xyz_grids.py -w 1024 -h 512
-    $ wget -O - https://raw.githubusercontent.com/learn2train/l2t-sd/main/utils/generate_xyz_grids.py | python3 - --y_axis_type='Checkpoint name' --y_axis_values $CHECKPOINTS
+    $ python generate_xyz_grids.py --input_filename 'xyz_prompt-1.json' --output_folder 'tests'
+    $ python3 generate_xyz_grids.py -W 768 -H 768
     """
     # datetime
     dt = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -61,14 +60,13 @@ def main(filename, output_folder, sampler, steps, seed, cfg_scale, width, height
     "Styles",
     ]
 
-    # Generate grid for each prompt test
+    # Generate grid for each prompt
     counter = 0
     for p in xyz_prompt_list:
         counter += 1
         print(f'Generating xyz grid {counter} out of {len(xyz_prompt_list)} prompt tests')
         prompt = p.get('prompt')
         negative_prompt = p.get('negative_prompt')
-        x_axis_type = 
         # Prepare prompt
         XAxisType = p.get('x_axis_type')
         XAxisValues = p.get('x_axis_values')
