@@ -30,8 +30,8 @@ def get_captions_from_filename(input_directory):
 
     Example:
 
-    input/'a man and his dog.jpg'
-    input/dogs/'a dog having a beer.jpg'
+    input/'a man and his dog_01.jpg'
+    input/dogs/'a dog having a beer_12.jpg'
 
     $ get_captions_from_filename('input')
     $ ['a man and his dog', 'a dog having a beer']
@@ -51,7 +51,7 @@ def get_captions_from_filename(input_directory):
 def get_captions(input_directory):
     """
     Get captions from text files inside an input folder recursively and put them into a list.
-    
+
     Example:
 
     input/001.txt # a man climbing a wall
@@ -84,10 +84,10 @@ def main(num_prompts, output_file, input_directory, negative_prompt,  seed, z_ax
 
     Examples:
     $ python caption2prompt.py -O xyz_prompts_test-caption-in-filename.json -N "(low quality, worst quality), EasyNegativeV2" --z_axis_type "Prompt S/R" --z_axis_values "Joe Smith,man" --seed -1 -n 20 -f
-    $ python caption2prompt.py --z_axis_type "Steps" --z_axis_values "20,30" --seed 1234 -d input-1
+    $ python caption2prompt.py --z_axis_type "Steps" --z_axis_values "20,30" --seed 1234 -d images
     """
     image_count = count_images_in_folder(input_directory)
-    print(f'Found {image_count} valid image files in the `{input_directory}` directory')
+    print(f'Creating {num_prompts} from {image_count} images files from the `{input_directory}` directory')
     if image_count < num_prompts:
         print(f'ERROR: Not enough images to generate {num_prompts} prompts')
         sys.exit(1)
