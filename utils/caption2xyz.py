@@ -72,19 +72,25 @@ def get_captions(input_directory):
                     print(f"An error occurred: {e}")
     return caption_list
 
-def main(num_prompts, output_file, input_directory, negative_prompt,  seed, z_axis_type, z_axis_values, filename_caption):
+def main(num_prompts, output_file, input_directory, negative_prompt,  x_axis_type, x_axis_values, y_axis_type, y_axis_values, z_axis_type, z_axis_values, filename_caption):
     """
     Create a XYZ grid prompt json file from captions inside an input directory. 
 
     Other prompt parameters can be used and will be applied to all captions:
     - Negative prompt
-    - Seed
+    - X axis type
+    - X axis values
+    - Y axis type
+    - Y axis values
     - Z axis type
     - Z axis values
 
     Examples:
-    $ python caption2prompt.py -O xyz_prompts_test-caption-in-filename.json -N "(low quality, worst quality), EasyNegativeV2" --z_axis_type "Prompt S/R" --z_axis_values "Joe Smith,man" --seed -1 -n 20 -f
-    $ python caption2prompt.py --z_axis_type "Steps" --z_axis_values "20,30" --seed 1234 -d images
+    $ python caption2prompt.py -i images -O xyz_prompts_filenames.json --x_axis_type="Steps" --x_axis_values="20,30" --y_axis_type='Seed' --y_axis_values='1234' --filename_caption
+    $ python caption2prompt.py -N "(low quality, worst quality), EasyNegativeV2," \
+      --x_axis_type="Seed" --x_axis_values="555" -n 20 \
+      --y_axis_type="Checkpoint name" --y_axis_values="checkpoint-1.ckpt,checkpoint-2.safetensors" \ 
+      --z_axis_type='Prompt S/R' --z_axis_values="joe smith, man"
     """
     image_count = count_images_in_folder(input_directory)
     print(f'Creating {num_prompts} from {image_count} images files from the `{input_directory}` directory')
@@ -106,13 +112,17 @@ def main(num_prompts, output_file, input_directory, negative_prompt,  seed, z_ax
     	    d = {}
     	    d['prompt'] = prompt
     	    d['negative_prompt'] = negative_prompt
-    	    d['seed'] = seed
+    	    d['x_axis_type'] = x_axis_type
+    	    d['x_axis_values'] = x_axis_values
+    	    d['y_axis_type'] = y_axis_type
+    	    d['y_axis_values'] = y_axis_values
     	    d['z_axis_type'] = z_axis_type
     	    d['z_axis_values'] = z_axis_values
     	    data.append(d)
         # Save prompts to json file
         with open(output_file, 'w') as fp:
             json.dump(data, fp)
+        print(f'Saved XYZ prompts to `{output_file}`') 
     else:
         print('ERROR: Could not get captions')
         return sys.exit(1)
@@ -121,11 +131,14 @@ if __name__ == '__main__':
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('-n', '--num_prompts', type=int, default=15, help='Number of prompts to generate at random from the files in input directory (default: 15)')
-    parser.add_argument('-d', '--input_directory', type=str, default='input', help="The folder where caption filenames are located (default: 'input')")
+    parser.add_argument('-i', '--input_directory', type=str, default='input', help="The folder where caption filenames are located (default: 'input')")
     parser.add_argument('-O', '--output_file', type=str, default='xyz_prompts.json', help='The name of the JSON file (default: xyz_prompts.json)')
     parser.add_argument('-N', '--negative_prompt', type=str, default='', help="Negative prompt (default: '')")
-    parser.add_argument('-s', '--seed', type=int, default=-1, help='Seed value (default: -1)')
-    parser.add_argument('-z', '--z_axis_type', type=str, default='Nothing', help="Z axis type. Options: 'Nothing', 'Prompt S/R', 'Steps', 'CFG Scale', 'Sampler', etc. (default: 'Nothing')")
+    parser.add_argument('-x', '--x_axis_type', type=str, default='Nothing', help="X axis type. Options: 'Nothing', 'Prompt S/R', 'Steps', 'CFG Scale', 'Sampler', 'Checkpoint name', etc. (default: 'Nothing')")
+    parser.add_argument('-X', '--x_axis_values', default='', type=str, help="X axis values. (default: '')")
+    parser.add_argument('-y', '--y_axis_type', type=str, default='Nothing', help="Y axis type. Options: 'Nothing', 'Prompt S/R', 'Steps', 'CFG Scale', 'Sampler', 'Checkpoint name', etc. (default: 'Nothing')")
+    parser.add_argument('-Y', '--y_axis_values', default='', type=str, help="Y axis values. (default: '')")
+    parser.add_argument('-z', '--z_axis_type', type=str, default='Nothing', help="Z axis type. Options: 'Nothing', 'Prompt S/R', 'Steps', 'CFG Scale', 'Sampler', 'Checkpoint name', etc. (default: 'Nothing')")
     parser.add_argument('-Z', '--z_axis_values', default='', type=str, help="Z axis values. (default: '')")
     parser.add_argument('-f', '--filename_caption', action='store_true', default=False, help='Get captions from filenames. (default: False)')
     args = parser.parse_args()
@@ -134,10 +147,13 @@ if __name__ == '__main__':
     input_directory = args.input_directory
     output_file = args.output_file
     negative_prompt = args.negative_prompt
-    seed = args.seed
+    x_axis_type = args.x_axis_type
+    x_axis_values = args.x_axis_values
+    y_axis_type = args.y_axis_type
+    y_axis_values = args.y_axis_values
     z_axis_type = args.z_axis_type
     z_axis_values = args.z_axis_values
     filename_caption = args.filename_caption
 
     # Run main
-    main(num_prompts, output_file, input_directory, negative_prompt,  seed, z_axis_type, z_axis_values, filename_caption)
+    main(num_prompts, output_file, input_directory, negative_prompt,  x_axis_type, x_axis_values, y_axis_type, y_axis_values, z_axis_type, z_axis_values, filename_caption)
