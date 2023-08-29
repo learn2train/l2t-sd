@@ -8,15 +8,14 @@ import argparse
 import re
 import webuiapi
 
-def main(filename, ckpt_folder, checkpoints, baseline_ckpt, output_folder, sampler, steps, seed, cfg_scale, width, height):
+def main(filename, output_folder, sampler, steps, seed, cfg_scale, width, height):
     """
-    Generate XYZ grids from a prompt test JSON file and save images and their respective text files to `output` folder.
+    Generate XYZ grids from a prompt test JSON file and save images and texts to the `output` folder.
 
     Examples:
     $ python3 generate_xyz_grids.py -f 'prompt_sr.json' -C 'models/Stable-diffusion' -o 'output'
-    $ python3 generate_xyz_grids.py -f 'xyz_prompts.json'
-    $ python3 generate_xyz_grids.py -f 'xyz_prompts.json' -w 1024 -h 512
-    $ wget -O - https://raw.githubusercontent.com/learn2train/l2t-sd/main/utils/generate_xyz_grids.py | python3 - -f xyz_prompts.json --checkpoints $CHECKPOINTS
+    $ python3 generate_xyz_grids.py -w 1024 -h 512
+    $ wget -O - https://raw.githubusercontent.com/learn2train/l2t-sd/main/utils/generate_xyz_grids.py | python3 - --y_axis_type='Checkpoint name' --y_axis_values $CHECKPOINTS
     """
     # datetime
     dt = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -27,26 +26,10 @@ def main(filename, ckpt_folder, checkpoints, baseline_ckpt, output_folder, sampl
                         sampler=sampler,
                         steps=steps
                         )
-    if not checkpoints:
-        # Get your checkpoints
-        ckpt_list = [os.path.basename(x) for x in glob.glob(f'{ckpt_folder}/*gs*.ckpt')]
-
-        # Sort checkpoints by global step ascending
-        substrings = [int(x) for string in ckpt_list for x in re.findall(r'gs(\d+)', string)]
-        substrings.sort()
-        checkpoint_list = [string for x in substrings for string in ckpt_list if int(re.findall(r'gs(\d+)', string)[0]) == x]
-
-        # Add baseline ckpt
-        if baseline_ckpt:
-            checkpoint_list.insert(0, baseline_ckpt)
-
-        # Prepare checkpoints str
-        checkpoints = ','.join(checkpoint_list)
-
     # Load prompts
     with open (filename, 'r') as j:
-        prompt_tests_list = json.loads(j.read())
-        print(f'Loaded {len(prompt_tests_list)} prompt tests')
+        xyz_prompt_list = json.loads(j.read())
+        print(f'Loaded {len(xyz_prompt_list)} prompt tests')
 
     # Create output folder
     if not os.path.exists(output_folder):
@@ -80,21 +63,19 @@ def main(filename, ckpt_folder, checkpoints, baseline_ckpt, output_folder, sampl
 
     # Generate grid for each prompt test
     counter = 0
-    for p in prompt_tests_list:
+    for p in xyz_prompt_list:
         counter += 1
-        print(f'Generating xyz grid {counter} out of {len(prompt_tests_list)} prompt tests')
+        print(f'Generating xyz grid {counter} out of {len(xyz_prompt_list)} prompt tests')
         prompt = p.get('prompt')
         negative_prompt = p.get('negative_prompt')
-        z_axis_values = p.get('z_axis_values')
-        seed = str(p.get('seed'))
-        z_axis_type = p.get('z_axis_type')
+        x_axis_type = 
         # Prepare prompt
-        XAxisType = "Seed"
-        XAxisValues = seed
-        YAxisType = "Checkpoint name"
-        YAxisValues = checkpoints
-        ZAxisType = z_axis_type
-        ZAxisValues = z_axis_values
+        XAxisType = p.get('x_axis_type')
+        XAxisValues = p.get('x_axis_values')
+        YAxisType = p.get('y_axis_type')
+        YAxisValues = p.get('y_axis_values')
+        ZAxisType = p.get('z_axis_type')
+        ZAxisValues = p.get('z_axis_values')
         drawLegend = "True"
         includeLoneImages = "False"
         includeSubGrids = "False"
@@ -135,17 +116,19 @@ def main(filename, ckpt_folder, checkpoints, baseline_ckpt, output_folder, sampl
 Prompt: {prompt}
 Negative prompt: {negative_prompt}
 
-Steps: {steps}
 Sampler: {sampler}
+Steps: {steps}
+Seed: {seed}
 CFG scale: {cfg_scale}
+Height: {height}
+Width: {width}
 Script: X/Y/Z plot
-X Type: Seed
-X Values: {seed}
-Fixed X Values: {seed}
-Y Type: Checkpoint name
-Y Values: {checkpoints}
+X Type: {x_axis_type}
+X Values: {x_axis_values}
+Y Type: {y_axis_type}
+Y Values: {y_axis_values}
 Z Type: {z_axis_type}
-Z Values: "{z_axis_values}"
+Z Values: {z_axis_values}
 '''
         with open(f"{path_filename}.txt", "w") as f:
             f.write(image_info)
@@ -154,11 +137,8 @@ Z Values: "{z_axis_values}"
 if __name__ == '__main__':
     # Parse args
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--filename', type=str, default='prompt_tests.json', help='The name of the tests JSON file (default: prompt_tests.json)')
-    parser.add_argument('-F', '--ckpt_folder', type=str, default='models/Stable-diffusion/', help='Folder where checkpoints are located ( default: models/Stable-diffusion )')
-    parser.add_argument('-C', '--checkpoints', type=str, default=None, help='Comma-separated list of checkpoint names to be used instead of using those found in the ckpt folder. Eg. "SD-1.5.ckpt,SDv2-768.ckpt" (default=None)')
-    parser.add_argument('-b', '--baseline_ckpt', type=str, default='SDv1-5.ckpt', help='Baseline checkpoint used for comparisons (default: SDv1-5.ckpt)')
-    parser.add_argument('-o', '--output_folder', type=str, default='output', help='Folder where images and text files will be saved to ( default: output/ )')
+    parser.add_argument('-i', '--input_filename', type=str, default='xyz_prompts.json', help="The name of the JSON file (default: 'xyz_prompts.json')")
+    parser.add_argument('-O', '--output_folder', type=str, default='output', help='Folder where images and text files will be saved to ( default: output/ )')
     parser.add_argument('-S', '--sampler', type=str, default='Euler a', help='Sampler (default: Euler a)')
     parser.add_argument('-t', '--steps', type=int, default=20, help='Steps value (default: 20)')
     parser.add_argument('-s', '--seed', type=int, default=555, help='Seed value (default: 555)')
@@ -167,10 +147,7 @@ if __name__ == '__main__':
     parser.add_argument('-H', '--height', type=int, default=512, help='Height value (default: 512)')
     args = parser.parse_args()
 
-    filename = args.filename
-    ckpt_folder = args.ckpt_folder
-    checkpoints = args.checkpoints
-    baseline_ckpt = args.baseline_ckpt
+    filename = args.input_filename
     output_folder = args.output_folder
     sampler = args.sampler
     steps = args.steps
@@ -180,4 +157,4 @@ if __name__ == '__main__':
     height = args.height
 
     # Run main
-    main(filename, ckpt_folder, checkpoints, baseline_ckpt, output_folder, sampler, steps, seed, cfg_scale, width, height)
+    main(filename, output_folder, sampler, steps, seed, cfg_scale, width, height)
