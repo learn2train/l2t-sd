@@ -82,7 +82,7 @@ def main(filename, output_folder, sampler, steps, seed, cfg_scale, width, height
         result = api.txt2img(
                     prompt=prompt,
                     negative_prompt=negative_prompt,
-                    seed=seed,
+                    seed=int(seed),
                     cfg_scale=cfg_scale,
                     width=width,
                     height=height,
@@ -93,10 +93,13 @@ def main(filename, output_folder, sampler, steps, seed, cfg_scale, width, height
                     script_args=[
                         XYZPlotAvailableTxt2ImgScripts.index(XAxisType),
                         XAxisValues,
+                        [],
                         XYZPlotAvailableTxt2ImgScripts.index(YAxisType),
                         YAxisValues,
+                        [],
                         XYZPlotAvailableTxt2ImgScripts.index(ZAxisType),
                         ZAxisValues,
+                        [],
                         drawLegend,
                         includeLoneImages,
                         includeSubGrids,
@@ -106,7 +109,7 @@ def main(filename, output_folder, sampler, steps, seed, cfg_scale, width, height
         seq = '{0:0>4}'.format(counter)
         truncated_prompt = prompt[:100]
         path_filename = f'{output_folder}/{dt}/xyz_grid-{seq}-{seed}-{width}x{height}-{truncated_prompt}'
-        print(f'Saving image as {path_filename}.png')
+        print(f'Saving image as "{path_filename}.png"')
         print('')
         result.image.save(f'{path_filename}.png')
         # Save txt file
@@ -121,12 +124,12 @@ CFG scale: {cfg_scale}
 Height: {height}
 Width: {width}
 Script: X/Y/Z plot
-X Type: {x_axis_type}
-X Values: {x_axis_values}
-Y Type: {y_axis_type}
-Y Values: {y_axis_values}
-Z Type: {z_axis_type}
-Z Values: {z_axis_values}
+X Type: {XAxisType}   
+X Values: {XAxisValues}
+Y Type: {YAxisType}
+Y Values: {YAxisValues}
+Z Type: {ZAxisType}
+Z Values: {ZAxisValues}
 '''
         with open(f"{path_filename}.txt", "w") as f:
             f.write(image_info)
